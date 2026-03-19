@@ -35,10 +35,10 @@ export function useSupabase() {
   /* ────────────────────────── FETCH ALL ────────────────────────── */
   const fetchAll = useCallback(async () => {
     try {
-      // 1. Participants
+      // 1. Users (view joins auth.users + participantes)
       const { data: parts } = await supabase
-        .from('participantes').select('user_id, nome_publico');
-      const nameMap = new Map((parts || []).map(p => [p.user_id, p.nome_publico || 'Sem nome']));
+        .from('admin_users').select('user_id, nome, email');
+      const nameMap = new Map((parts || []).map(p => [p.user_id, p.nome || p.email || 'Sem nome']));
 
       // 2. Integrations
       const { data: integs } = await supabase
