@@ -1,40 +1,52 @@
-const sevIcons = { critical: '!', warning: '⚠' };
-const sevColors = { critical: '#DC2626', warning: '#F59E0B' };
+const sevConfig = {
+  critical: {
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    ),
+    color: '#DC2626', bg: '#FEF2F2', border: '#FECACA',
+  },
+  warning: {
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    ),
+    color: '#D97706', bg: '#FFFBEB', border: '#FDE68A',
+  },
+};
 
-export default function AlertPanel({ alerts }) {
+export default function AlertPanel({ alerts, T }) {
   if (alerts.length === 0) {
     return (
-      <div style={{ background: '#0E0E0E', border: '1px solid #222', borderRadius: 12, padding: 16 }}>
-        <span style={{ fontSize: 9, fontWeight: 500, color: '#555', textTransform: 'uppercase', letterSpacing: '0.18em' }}>
-          ALERTAS
-        </span>
-        <p style={{ color: '#333', fontSize: 12, marginTop: 10, textAlign: 'center' }}>Nenhum alerta ativo</p>
+      <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 13, padding: '22px 24px' }}>
+        <div style={{ fontSize: 12, color: T.textSub, fontWeight: 500, marginBottom: 12 }}>Alertas</div>
+        <p style={{ color: T.textMuted, fontSize: 12, textAlign: 'center', marginTop: 10 }}>Nenhum alerta ativo</p>
       </div>
     );
   }
 
   return (
-    <div style={{ background: '#0E0E0E', border: '1px solid #222', borderRadius: 12, padding: 16 }}>
-      <span style={{ fontSize: 9, fontWeight: 500, color: '#555', textTransform: 'uppercase', letterSpacing: '0.18em' }}>
-        ALERTAS ({alerts.length})
-      </span>
-      <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 240, overflowY: 'auto' }}>
-        {alerts.map((a, i) => (
-          <div key={i} style={{
-            display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 8,
-            background: a.severity === 'critical' ? '#1A080815' : '#1A100815',
-            border: `1px solid ${a.severity === 'critical' ? '#2D000030' : '#2D1A0030'}`,
-          }}>
-            <span style={{ color: sevColors[a.severity], fontSize: 12, fontWeight: 700, width: 16, textAlign: 'center' }}>
-              {sevIcons[a.severity]}
-            </span>
-            <span style={{ fontSize: 11, color: '#E8E8E8', fontWeight: 500, minWidth: 80 }}>
-              {a.user}
-              {a.platform && <span style={{ fontSize: 8, color: '#555', marginLeft: 4 }}>{a.platform === 'apple' ? 'iOS' : 'And'}</span>}
-            </span>
-            <span style={{ fontSize: 11, color: '#778899', flex: 1 }}>{a.msg}</span>
-          </div>
-        ))}
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 13, padding: '22px 24px' }}>
+      <div style={{ fontSize: 12, color: T.textSub, fontWeight: 500, marginBottom: 12 }}>
+        Alertas ({alerts.length})
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 240, overflowY: 'auto' }}>
+        {alerts.map((a, i) => {
+          const sc = sevConfig[a.severity] || sevConfig.warning;
+          return (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 10,
+              background: sc.bg, border: `1px solid ${sc.border}`,
+            }}>
+              <span style={{ width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {sc.icon}
+              </span>
+              <span style={{ fontSize: 12, color: T.text, fontWeight: 600, minWidth: 80 }}>
+                {a.user}
+                {a.platform && <span style={{ fontSize: 9, color: T.textMuted, marginLeft: 4 }}>{a.platform === 'apple' ? 'iOS' : 'And'}</span>}
+              </span>
+              <span style={{ fontSize: 12, color: T.textSub, flex: 1 }}>{a.msg}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
