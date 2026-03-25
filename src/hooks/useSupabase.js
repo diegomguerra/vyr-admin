@@ -72,6 +72,23 @@ export function useSupabase() {
         totalGlobal++;
       }
 
+      // Fallback: derive sample counts from ring_daily_data when biomarker_samples is empty
+      if (totalGlobal === 0) {
+        for (const r of (rings || [])) {
+          const m = r.metrics || {};
+          const uid = r.user_id;
+          const c = countMap.get(uid) || {};
+          if (m.hr_avg != null) c.hr = (c.hr || 0) + 1;
+          if (m.rhr != null) c.rhr = (c.rhr || 0) + 1;
+          if (m.hrv_sdnn != null) c.hrv = (c.hrv || 0) + 1;
+          if (m.spo2 != null) c.spo2 = (c.spo2 || 0) + 1;
+          if (m.steps != null) c.steps = (c.steps || 0) + 1;
+          if (m.sleep_duration_hours != null) c.sleep = (c.sleep || 0) + 1;
+          if (m.stress_level != null) c.stress = (c.stress || 0) + 1;
+          countMap.set(uid, c);
+        }
+      }
+
       // Build user list
       const allIds = new Set([...nameMap.keys(), ...integMap.keys(), ...daysMap.keys()]);
       const rows = [];
@@ -190,7 +207,21 @@ export function useSupabase() {
         .from('biomarker_samples').select('ts, value')
         .eq('user_id', userId).eq('type', 'hr')
         .gte('ts', since24h).order('ts');
-      setUserHr24((hrRaw || []).map(r => ({ ts: r.ts, value: r.value })));
+      if (hrRaw && hrRaw.length > 0) {
+        setUserHr24(hrRaw.map(r => ({ ts: r.ts, value: r.value })));
+      } else {
+        // Fallback: daily HR avg from ring_daily_data
+        const { data: hrDaily } = await supabase
+          .from('ring_daily_data').select('day, metrics')
+          .eq('user_id', userId)
+          .gte('day', daysAgo(14).split('T')[0])
+          .order('day');
+        setUserHr24((hrDaily || []).map(r => ({
+          ts: r.day,
+          value: r.metrics?.hr_avg ?? null,
+          isDaily: true,
+        })));
+      }
 
       // Stress from ring_daily_data (daily granularity)
       const { data: stressRaw } = await supabase
@@ -224,6 +255,25 @@ export function useSupabase() {
           .order('ts', { ascending: false }).limit(1);
         if (data && data[0]) latest[t] = data[0];
       }
+      // Fallback: derive latest from ring_daily_data
+      if (Object.keys(latest).length === 0) {
+        const { data: latestRing } = await supabase
+          .from('ring_daily_data').select('day, metrics, updated_at')
+          .eq('user_id', userId)
+          .order('day', { ascending: false })
+          .limit(1);
+        if (latestRing && latestRing[0]) {
+          const m = latestRing[0].metrics || {};
+          const ts = latestRing[0].updated_at || latestRing[0].day;
+          if (m.hr_avg != null) latest.hr = { ts, value: m.hr_avg };
+          if (m.rhr != null) latest.rhr = { ts, value: m.rhr };
+          if (m.hrv_sdnn != null) latest.hrv = { ts, value: m.hrv_sdnn };
+          if (m.spo2 != null) latest.spo2 = { ts, value: m.spo2 };
+          if (m.respiratory_rate != null) latest.rr = { ts, value: m.respiratory_rate };
+          if (m.steps != null) latest.steps = { ts, value: m.steps };
+          if (m.sleep_duration_hours != null) latest.sleep = { ts, value: m.sleep_duration_hours, payload_json: { sleepQuality: m.sleep_quality } };
+        }
+      }
       setUserLatest(latest);
 
       // Raw samples today
@@ -233,7 +283,39 @@ export function useSupabase() {
         .gte('ts', today() + 'T00:00:00')
         .order('ts', { ascending: false })
         .limit(200);
-      setUserRawToday(rawToday || []);
+      if (rawToday && rawToday.length > 0) {
+        setUserRawToday(rawToday);
+      } else {
+        // Fallback: expand ring_daily_data metrics into synthetic rows
+        const { data: ringToday } = await supabase
+          .from('ring_daily_data').select('day, metrics, source_provider, updated_at')
+          .eq('user_id', userId)
+          .eq('day', today());
+        const syntheticRows = [];
+        for (const r of (ringToday || [])) {
+          const m = r.metrics || {};
+          const ts = r.updated_at || r.day + 'T00:00:00';
+          const entries = [
+            { type: 'hr', value: m.hr_avg },
+            { type: 'rhr', value: m.rhr },
+            { type: 'hrv', value: m.hrv_sdnn },
+            { type: 'spo2', value: m.spo2 },
+            { type: 'steps', value: m.steps },
+            { type: 'sleep', value: m.sleep_duration_hours },
+            { type: 'stress', value: m.stress_level },
+          ];
+          for (const e of entries) {
+            if (e.value != null) {
+              syntheticRows.push({
+                type: e.type, ts, end_ts: null, value: e.value,
+                source: r.source_provider || 'health_connect',
+                payload_json: null,
+              });
+            }
+          }
+        }
+        setUserRawToday(syntheticRows);
+      }
     } catch (e) {
       console.error('[admin] fetchUserDetail error:', e);
     } finally {
@@ -268,9 +350,22 @@ export function useSupabase() {
       })
       .subscribe();
 
+    // Subscribe to ring_daily_data changes
+    const ringChannel = supabase
+      .channel('admin-ring-daily')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ring_daily_data' }, (payload) => {
+        console.info('[realtime] ring_daily_data change');
+        fetchAll();
+        if (selectedRef.current && payload.new?.user_id === selectedRef.current) {
+          fetchUserDetail(selectedRef.current);
+        }
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(bioChannel);
       supabase.removeChannel(integChannel);
+      supabase.removeChannel(ringChannel);
     };
   }, [fetchAll, fetchUserDetail]);
 

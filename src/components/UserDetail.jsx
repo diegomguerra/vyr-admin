@@ -80,7 +80,7 @@ export default function UserDetail({
 
   // HR 24h
   const hrData = {
-    labels: userHr24.map(d => new Date(d.ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })),
+    labels: userHr24.map(d => d.isDaily ? d.ts.slice(5) : new Date(d.ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })),
     datasets: [{
       label: 'FC (bpm)', data: userHr24.map(d => d.value),
       borderColor: '#4B7BEC', backgroundColor: '#4B7BEC22',
@@ -139,7 +139,7 @@ export default function UserDetail({
         <LatestCard label="SpO2" value={userLatest.spo2?.value} unit="%" color="#06B6D4" time={userLatest.spo2?.ts} />
         <LatestCard label="RR" value={userLatest.rr?.value} unit="rpm" color="#EF4444" time={userLatest.rr?.ts} />
         <LatestCard label="Passos" value={userLatest.steps?.value} color="#22c55e" time={userLatest.steps?.ts} />
-        <LatestCard label="Sono" value={userLatest.sleep?.payload_json?.sleepState || '—'} color="#EC4899" time={userLatest.sleep?.ts} />
+        <LatestCard label="Sono" value={typeof userLatest.sleep?.value === 'number' ? `${userLatest.sleep.value}h` : (userLatest.sleep?.payload_json?.sleepState || '—')} color="#EC4899" time={userLatest.sleep?.ts} />
       </div>
 
       {/* Charts grid */}
@@ -157,7 +157,7 @@ export default function UserDetail({
         {/* HR 24h */}
         <div style={{ background: '#0A0A0A', border: '1px solid #1A1A1A', borderRadius: 10, padding: 14 }}>
           <span style={{ fontSize: 9, fontWeight: 500, color: '#4B7BEC', textTransform: 'uppercase', letterSpacing: '0.14em' }}>
-            FC · ÚLTIMAS 24H
+            {userHr24.length > 0 && userHr24[0].isDaily ? 'FC MÉDIA · ÚLTIMOS 14 DIAS' : 'FC · ÚLTIMAS 24H'}
           </span>
           <div style={{ height: 180, marginTop: 8 }}>
             {userHr24.length > 0 ? <Line data={hrData} options={chartOpts('FC')} /> :

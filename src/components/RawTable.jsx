@@ -1,13 +1,13 @@
 const typeColors = {
   hr: '#4B7BEC', rhr: '#8B5CF6', hrv: '#F59E0B', spo2: '#06B6D4',
-  rr: '#EF4444', steps: '#22c55e', sleep: '#EC4899',
+  rr: '#EF4444', steps: '#22c55e', sleep: '#EC4899', stress: '#DC2626',
 };
 
 export default function RawTable({ samples }) {
   return (
     <div style={{ background: '#0A0A0A', border: '1px solid #1A1A1A', borderRadius: 10, padding: 14 }}>
       <span style={{ fontSize: 9, fontWeight: 500, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.18em' }}>
-        REGISTROS BRUTOS · HOJE ({samples.length})
+        DADOS · HOJE ({samples.length})
       </span>
       {samples.length === 0 ? (
         <p style={{ color: '#333', fontSize: 11, textAlign: 'center', marginTop: 16 }}>Sem amostras hoje</p>
