@@ -28,7 +28,10 @@ export default function AlertPanel({ alerts }) {
             <span style={{ color: sevColors[a.severity], fontSize: 12, fontWeight: 700, width: 16, textAlign: 'center' }}>
               {sevIcons[a.severity]}
             </span>
-            <span style={{ fontSize: 11, color: '#E8E8E8', fontWeight: 500, minWidth: 80 }}>{a.user}</span>
+            <span style={{ fontSize: 11, color: '#E8E8E8', fontWeight: 500, minWidth: 80 }}>
+              {a.user}
+              {a.platform && <span style={{ fontSize: 8, color: '#555', marginLeft: 4 }}>{a.platform === 'apple' ? 'iOS' : 'And'}</span>}
+            </span>
             <span style={{ fontSize: 11, color: '#778899', flex: 1 }}>{a.msg}</span>
           </div>
         ))}

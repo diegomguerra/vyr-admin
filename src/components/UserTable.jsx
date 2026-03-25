@@ -49,7 +49,7 @@ export default function UserTable({ users, selectedUser, onSelect }) {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid #1A1A1A' }}>
-              {['', 'NOME', 'STATUS HC', 'ÚLTIMO SYNC', 'SCORE', 'AMOSTRAS', 'DIAS'].map(h => (
+              {['', 'NOME', 'PLATAFORMA', 'STATUS', 'ÚLTIMO SYNC', 'SCORE', 'AMOSTRAS', 'DIAS'].map(h => (
                 <th key={h} style={{
                   fontSize: 9, fontWeight: 500, color: '#555', textTransform: 'uppercase',
                   letterSpacing: '0.14em', padding: '6px 8px', textAlign: 'left',
@@ -62,7 +62,7 @@ export default function UserTable({ users, selectedUser, onSelect }) {
               const st = getUserStatus(u);
               const isSelected = selectedUser === u.id;
               return (
-                <tr key={u.id} onClick={() => onSelect(u.id)}
+                <tr key={`${u.id}-${u.platform}`} onClick={() => onSelect(u.id, u.platform)}
                   style={{
                     borderBottom: '1px solid #111', cursor: 'pointer',
                     background: isSelected ? '#111827' : 'transparent',
@@ -77,6 +77,16 @@ export default function UserTable({ users, selectedUser, onSelect }) {
                     }} />
                   </td>
                   <td style={{ padding: '8px 8px', fontSize: 13, color: '#E8E8E8', fontWeight: 500 }}>{u.name}</td>
+                  <td style={{ padding: '8px 8px' }}>
+                    <span style={{
+                      fontSize: 9, padding: '2px 6px', borderRadius: 4, fontWeight: 600,
+                      background: u.platform === 'apple' ? '#55555515' : '#22c55e15',
+                      color: u.platform === 'apple' ? '#999' : '#4CAF50',
+                      letterSpacing: '0.05em',
+                    }}>
+                      {u.platform === 'apple' ? 'iOS' : 'Android'}
+                    </span>
+                  </td>
                   <td style={{ padding: '8px 8px' }}>
                     <span style={{
                       fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 500,

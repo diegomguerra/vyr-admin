@@ -76,7 +76,7 @@ export default function App() {
       </section>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12, marginBottom: 20 }}>
-        <UserTable users={users} selectedUser={selectedUser} onSelect={fetchUserDetail} />
+        <UserTable users={users} selectedUser={selectedUser} onSelect={(id, platform) => fetchUserDetail(id, platform)} />
         <AlertPanel alerts={alerts} />
       </div>
 

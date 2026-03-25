@@ -118,7 +118,15 @@ export default function UserDetail({
           <span style={{ fontSize: 9, fontWeight: 500, color: '#4B7BEC', textTransform: 'uppercase', letterSpacing: '0.18em' }}>
             DADOS DO USUÁRIO
           </span>
-          <h2 style={{ fontSize: 18, fontWeight: 500, color: '#E8E8E8', marginTop: 2 }}>{user.name}</h2>
+          <h2 style={{ fontSize: 18, fontWeight: 500, color: '#E8E8E8', marginTop: 2 }}>
+            {user.name}
+            {user.platform && <span style={{
+              fontSize: 9, padding: '2px 6px', borderRadius: 4, fontWeight: 600, marginLeft: 8,
+              background: user.platform === 'apple' ? '#55555515' : '#22c55e15',
+              color: user.platform === 'apple' ? '#999' : '#4CAF50',
+              verticalAlign: 'middle',
+            }}>{user.platform === 'apple' ? 'iOS' : 'Android'}</span>}
+          </h2>
         </div>
         {user.score !== null && (
           <div style={{ textAlign: 'right' }}>
