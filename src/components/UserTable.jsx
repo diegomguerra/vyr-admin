@@ -111,10 +111,15 @@ export default function UserTable({ users, selectedUser, onSelect, T }) {
                   </td>
                   <td style={{ padding: '14px 18px' }}>
                     {u.score !== null ? (
-                      <span style={{
-                        fontSize: 18, fontWeight: 800,
-                        color: u.score >= 70 ? T.green : u.score >= 45 ? T.amber : T.red,
-                      }}>{u.score}</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                        <span style={{
+                          fontSize: 18, fontWeight: 800,
+                          color: u.score >= 70 ? T.green : u.score >= 45 ? T.amber : T.red,
+                        }}>{u.score}</span>
+                        {u.stateDay && u.stateDay !== new Date().toISOString().split('T')[0] && (
+                          <span style={{ fontSize: 9, color: T.textMuted }}>{u.stateDay.slice(5)}</span>
+                        )}
+                      </div>
                     ) : <span style={{ color: T.textMuted, fontSize: 13 }}>—</span>}
                   </td>
                   <td style={{ padding: '14px 18px', fontSize: 13, color: T.textSub }}>{u.total_samples.toLocaleString()}</td>

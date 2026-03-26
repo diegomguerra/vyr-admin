@@ -147,7 +147,12 @@ export default function UserDetail({
                 fontSize: 38, fontWeight: 800, letterSpacing: '-0.03em',
                 color: user.score >= 70 ? T.green : user.score >= 45 ? T.amber : T.red,
               }}>{user.score}</span>
-              <div style={{ fontSize: 11, color: T.textMuted }}>{user.level}</div>
+              <div style={{ fontSize: 11, color: T.textMuted }}>
+                {user.level}
+                {user.stateDay && user.stateDay !== new Date().toISOString().split('T')[0] && (
+                  <span style={{ marginLeft: 6, fontSize: 10, color: T.textMuted }}>({user.stateDay})</span>
+                )}
+              </div>
             </div>
           )}
         </div>

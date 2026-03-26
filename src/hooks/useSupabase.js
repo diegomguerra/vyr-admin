@@ -59,11 +59,17 @@ export function useSupabase() {
       daysMap.set(r.user_id, (daysMap.get(r.user_id) || 0) + 1);
     }
 
-    // 4. Today's scores
+    // 4. Latest scores (most recent state per user, not just today)
     const { data: states } = await client
-      .from('computed_states').select('user_id, score, level')
-      .eq('day', today());
-    const scoreMap = new Map((states || []).map(s => [s.user_id, s]));
+      .from('computed_states').select('user_id, score, level, day')
+      .order('day', { ascending: false });
+    // Keep only the most recent row per user
+    const scoreMap = new Map();
+    for (const s of (states || [])) {
+      if (!scoreMap.has(s.user_id)) {
+        scoreMap.set(s.user_id, s);
+      }
+    }
 
     // 5. Biomarker sample counts
     const { data: samples } = await client
@@ -114,6 +120,7 @@ export function useSupabase() {
         days: daysMap.get(uid) || 0,
         score: sc.score ?? null,
         level: sc.level ?? null,
+        stateDay: sc.day ?? null,
         total_samples: totalSamples,
         counts,
       });
